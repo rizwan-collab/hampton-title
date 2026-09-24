@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hampton Title — Closing Pipeline</title>
+<style>
+:root{
+  --navy:#16283F; --navy2:#1F3352; --gold:#B08D57; --cream:#F6F2EA;
+  --ink:#1B1E24; --grey:#5F6875; --line:#E3E7EC; --bg:#F5F6F8;
+  --green:#15803D; --red:#9B3B3B; --amber:#B45309;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+button,input,select{font-family:inherit;}
+
+.hdr{background:var(--navy);color:#fff;padding:16px 22px 14px;}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px;flex-wrap:wrap;}
+.brand{display:flex;align-items:baseline;gap:9px;}
+.brand h1{font:700 18px/1 inherit;letter-spacing:-.2px;}
+.brand .sub{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.08em;text-transform:uppercase;}
+.btn{font:600 12.5px/1 inherit;padding:8px 13px;border-radius:7px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;transition:.15s;}
+.btn:hover{background:rgba(255,255,255,.2);}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#241B0C;}
+.btn-gold:hover{background:#C29B63;}
+
+.per{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:9px;
+  padding:7px 9px;margin-bottom:12px;flex-wrap:wrap;}
+.per select{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#fff;
+  border-radius:6px;padding:6px 9px;font-size:12.5px;outline:none;cursor:pointer;}
+.per select option{color:#1B1E24;}
+.pnav{display:flex;align-items:center;gap:4px;margin-left:2px;}
+.pnav button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#fff;
+  width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:15px;line-height:1;}
+.pnav button:hover{background:rgba(255,255,255,.2);}
+.plabel{font:700 13.5px/1 inherit;text-align:center;color:var(--gold);padding:0 4px;white-space:nowrap;}
+.pcustom{display:none;align-items:center;gap:6px;}
+.pcustom input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#fff;
+  border-radius:6px;padding:5px 8px;font-size:12.5px;outline:none;}
+.pcustom input:focus{border-color:var(--gold);}
+.pcustom .pdash{font-size:11.5px;color:rgba(255,255,255,.55);}
+.ptoday{margin-left:auto;font-size:11.5px;color:rgba(255,255,255,.55);}
+
+.cards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:11px;}
+.sc{flex:1;min-width:158px;background:rgba(255,255,255,.07);border-radius:9px;padding:11px 13px;
+  border-left:3px solid var(--gold);cursor:pointer;transition:.15s;}
+.sc:hover{background:rgba(255,255,255,.15);}
+.sc.sel{background:rgba(255,255,255,.2);}
+.sc-t{display:flex;justify-content:space-between;align-items:center;gap:6px;}
+.sc-l{font:700 10.5px/1 inherit;letter-spacing:.55px;text-transform:uppercase;color:rgba(255,255,255,.72);}
+.sc-n{font:700 12px/1 inherit;background:rgba(255,255,255,.16);border-radius:20px;padding:3px 9px;}
+.sc-v{font:700 17px/1.15 inherit;margin-top:7px;color:var(--gold);letter-spacing:-.2px;}
+.sc-s{font-size:10.5px;color:rgba(255,255,255,.5);margin-top:4px;}
+
+.stats{display:flex;gap:9px;flex-wrap:wrap;}
+.st{background:rgba(255,255,255,.07);border-radius:8px;padding:9px 13px;flex:1;min-width:112px;}
+.st-v{font:700 17px/1 inherit;color:#fff;} .st-v.gold{color:var(--gold);}
+.st-l{font-size:9.5px;color:rgba(255,255,255,.5);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
+
+.tabs{background:#fff;border-bottom:1px solid var(--line);padding:0 22px;display:flex;gap:2px;overflow-x:auto;}
+.tab{padding:12px 15px;font:600 13px/1 inherit;color:var(--grey);cursor:pointer;
+  border-bottom:2px solid transparent;white-space:nowrap;}
+.tab.active{color:var(--navy);border-bottom-color:var(--gold);}
+.tbar{background:#fff;border-bottom:1px solid #EEF0F2;padding:9px 22px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.tbar input[type=text],.tbar select{padding:7px 10px;border:1px solid #D4D9E0;border-radius:7px;font-size:13px;outline:none;background:#fff;}
+.tbar input[type=text]{width:220px;}
+.tbar input:focus,.tbar select:focus{border-color:var(--gold);}
+.cnt{margin-left:auto;font-size:12px;color:var(--grey);background:#F1F3F5;padding:4px 11px;border-radius:20px;}
+
+.wrap{padding:16px 22px 50px;}
+.view{display:none;} .view.active{display:block;}
+
+.board{display:grid;grid-template-columns:repeat(4,minmax(215px,1fr));gap:12px;}
+.col{background:#E9ECF0;border-radius:11px;padding:9px;min-height:110px;border-top:3px solid var(--cc);}
+.col-h{display:flex;align-items:center;gap:7px;padding:3px 5px 10px;}
+.col-d{width:8px;height:8px;border-radius:50%;background:var(--cc);}
+.col-t{font:700 11px/1 inherit;text-transform:uppercase;letter-spacing:.5px;}
+.col-n{font:700 10.5px/1 inherit;color:#fff;background:var(--cc);border-radius:20px;padding:3px 8px;}
+.col-m{margin-left:auto;font-size:11px;color:var(--grey);}
+.col-e{text-align:center;color:#B6BDC7;font-size:12px;padding:18px 0;}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px 11px;margin-bottom:8px;
+  cursor:pointer;transition:.12s;}
+.card:hover{border-color:var(--gold);box-shadow:0 2px 10px rgba(22,40,63,.09);}
+.c-name{font:600 13px/1.3 inherit;color:var(--navy);}
+.c-chips{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0 7px;}
+.chip{font:600 9.5px/1 inherit;padding:3px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px;}
+.chip.res{background:#E8F0FB;color:#1D4E89;} .chip.com{background:#F3EDE2;color:#8A6E43;}
+.chip.rep{background:#EEF0F3;color:#5F6875;text-transform:none;letter-spacing:0;}
+.c-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--grey);padding:3px 0;}
+.c-row b{color:var(--ink);}
+.c-rev{display:flex;justify-content:space-between;font-size:11.5px;margin-top:6px;padding-top:6px;
+  border-top:1px dashed var(--line);}
+.c-rev .amt{font-weight:700;color:var(--green);}
+.c-date{font-size:11px;color:var(--amber);margin-top:5px;}
+.c-date.past{color:var(--red);font-weight:600;}
+.qbtns{display:flex;gap:4px;margin-top:8px;}
+.qb{flex:1;font:600 10px/1 inherit;padding:5px 3px;border-radius:5px;border:1px solid var(--line);
+  background:#fff;color:var(--grey);cursor:pointer;}
+.qb:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(22,40,63,.07);}
+th{background:var(--navy);color:#fff;font:700 10.5px/1 inherit;text-transform:uppercase;letter-spacing:.07em;
+  padding:11px 12px;text-align:left;cursor:pointer;white-space:nowrap;}
+th.r,td.r{text-align:right;}
+td{padding:10px 12px;border-bottom:1px solid #F0F2F4;font-size:13px;}
+tbody tr{cursor:pointer;} tbody tr:hover{background:#FAFBFC;}
+tbody tr:nth-child(even){background:var(--cream);}
+tbody tr:nth-child(even):hover{background:#F0EBE0;}
+.pill{font:600 10px/1 inherit;color:#fff;padding:4px 8px;border-radius:20px;white-space:nowrap;}
+
+.mg{background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:11px;overflow:hidden;}
+.mg.uns{border-style:dashed;background:#FCFCFD;}
+.mg.cur{border-color:var(--gold);box-shadow:0 0 0 2px rgba(176,141,87,.15);}
+.mg-h{display:flex;align-items:center;gap:10px;padding:11px 15px;background:#F7F8FA;border-bottom:1px solid #EEF0F2;cursor:pointer;}
+.mg-m{font:700 13px/1 inherit;color:var(--navy);}
+.mg-n{font-size:11px;color:var(--grey);background:#EEF0F3;border-radius:20px;padding:3px 9px;}
+.mg-t{margin-left:auto;font-size:12px;color:var(--grey);} .mg-t b{color:var(--green);}
+.mr{display:flex;align-items:center;gap:10px;padding:9px 15px;border-bottom:1px solid #F3F4F6;cursor:pointer;font-size:13px;}
+.mr:last-child{border-bottom:0;} .mr:hover{background:#FAFBFC;}
+.mr-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;}
+.mr-x{font-size:12px;color:var(--grey);width:92px;text-align:right;}
+.mr-w{font-size:12px;font-weight:700;color:var(--green);width:92px;text-align:right;}
+.mtot{background:var(--navy);color:#fff;border-radius:10px;padding:15px 17px;font-size:13px;}
+.mtot b{color:var(--gold);}
+.mtot .n{font-size:11px;color:rgba(255,255,255,.5);margin-top:8px;line-height:1.55;}
+
+.legend{margin-top:14px;font-size:11.5px;color:var(--grey);background:#fff;border:1px solid var(--line);
+  border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 13px;}
+.legend b{color:var(--navy);}
+.sc-v{white-space:nowrap;}
+.empty{text-align:center;padding:52px 20px;color:#9AA3AE;background:#fff;border-radius:10px;border:1px dashed var(--line);}
+.empty b{display:block;color:var(--navy);font-size:15px;margin-bottom:6px;}
+
+.scrim{position:fixed;inset:0;background:rgba(15,23,35,.5);opacity:0;pointer-events:none;transition:.2s;z-index:40;}
+.scrim.on{opacity:1;pointer-events:auto;}
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-48%) scale(.98);width:min(560px,94vw);
+  max-height:92vh;overflow-y:auto;background:#fff;border-radius:14px;z-index:50;opacity:0;pointer-events:none;
+  transition:.2s;box-shadow:0 24px 70px rgba(15,23,35,.35);}
+.modal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+.m-h{background:var(--navy);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;
+  align-items:center;border-radius:14px 14px 0 0;position:sticky;top:0;z-index:2;}
+.m-h h2{font:700 16px/1 inherit;}
+.m-x{background:none;border:0;color:rgba(255,255,255,.65);font-size:24px;cursor:pointer;line-height:1;padding:0 4px;}
+.m-x:hover{color:#fff;}
+.m-b{padding:18px 20px 22px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.fgrid .full{grid-column:1/-1;}
+label.f{display:flex;flex-direction:column;gap:5px;}
+label.f .t{font:700 10.5px/1 inherit;text-transform:uppercase;letter-spacing:.5px;color:var(--grey);}
+label.f .hint{font-size:10.5px;color:#9AA3AE;font-weight:400;text-transform:none;letter-spacing:0;}
+label.f input{padding:9px 11px;border:1px solid #D4D9E0;border-radius:8px;font-size:14px;outline:none;width:100%;background:#fff;}
+label.f input:focus{border-color:var(--gold);}
+.seg{display:flex;border:1px solid #D4D9E0;border-radius:8px;overflow:hidden;}
+.seg button{flex:1;padding:9px 6px;border:0;background:#fff;font:600 12.5px/1 inherit;color:var(--grey);cursor:pointer;}
+.seg button.on{color:#fff;}
+.calc{background:var(--cream);border:1px solid #E5DDCC;border-radius:10px;padding:14px 15px;margin-top:16px;}
+.calc h4{font:700 10.5px/1 inherit;text-transform:uppercase;letter-spacing:.6px;color:var(--gold);margin-bottom:10px;}
+.cl{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:13px;border-bottom:1px solid rgba(0,0,0,.05);}
+.cl:last-child{border-bottom:0;}
+.cl.tot{font-weight:700;color:var(--navy);border-top:1.5px solid var(--navy);margin-top:6px;padding-top:9px;border-bottom:0;}
+.cl .v{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;}
+.cl.sub{font-size:11.5px;color:var(--grey);}
+.m-f{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--line);}
+.btn-d{background:#fff;border:1px solid #D4D9E0;color:var(--grey);} .btn-d:hover{background:#F5F6F8;}
+.btn-nav{background:var(--navy);border-color:var(--navy);color:#fff;} .btn-nav:hover{background:var(--navy2);}
+.btn-del{background:#fff;border-color:#E5C4C4;color:var(--red);margin-right:auto;}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);
+  color:#fff;padding:11px 20px;border-radius:9px;font-size:13px;z-index:60;transition:.25s;opacity:0;}
+.toast.on{transform:translateX(-50%) translateY(0);opacity:1;}
+@media(max-width:820px){ .board{grid-template-columns:1fr 1fr;} }
+@media(max-width:560px){ .board{grid-template-columns:1fr;} .fgrid{grid-template-columns:1fr;}
+  .mr-x{display:none;} .plabel{min-width:118px;} }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="brand"><h1>Hampton Title</h1><span class="sub">Closing Pipeline</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="openNew()">+ Add File</button>
+      <button class="btn" onclick="exportCSV()">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="per">
+    <select id="pType" onchange="setPeriodType(this.value)">
+      <optgroup label="To date">
+        <option value="mtd">Month to date (MTD)</option>
+        <option value="qtd">Quarter to date (QTD)</option>
+        <option value="ytd">Year to date (YTD)</option>
+      </optgroup>
+      <optgroup label="Full period">
+        <option value="month">Month</option>
+        <option value="quarter">Quarter</option>
+        <option value="year">Year</option>
+      </optgroup>
+      <optgroup label="Other">
+        <option value="custom">Custom date range</option>
+        <option value="all">All time</option>
+      </optgroup>
+    </select>
+    <div class="pnav" id="pnav">
+      <button onclick="shift(-1)" title="Previous">&lsaquo;</button>
+      <button onclick="shift(1)" title="Next">&rsaquo;</button>
+    </div>
+    <span class="plabel" id="plabel">—</span>
+    <div class="pcustom" id="pcustom">
+      <input type="date" id="cFrom" onchange="render()">
+      <span class="pdash">to</span>
+      <input type="date" id="cTo" onchange="render()">
+    </div>
+    <button class="btn" id="btnToday" style="padding:6px 11px" onclick="goToday()">Today</button>
+    <span class="ptoday" id="ptoday"></span>
+  </div>
+
+  <div class="cards" id="cards"></div>
+  <div class="stats">
+    <div class="st"><div class="st-v" id="sFiles">0</div><div class="st-l">Files in Period</div></div>
+    <div class="st"><div class="st-v" id="sVol">$0</div><div class="st-l">Sales Volume</div></div>
+    <div class="st"><div class="st-v" id="sGross">$0</div><div class="st-l">Gross Premium</div></div>
+    <div class="st"><div class="st-v gold" id="sRev">$0</div><div class="st-l">Hampton Premium 85%</div></div>
+    <div class="st"><div class="st-v gold" id="sWtd">$0</div><div class="st-l">Weighted</div></div>
+    <div class="st"><div class="st-v" id="sFunded">$0</div><div class="st-l">Funded (Actual)</div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-v="board" onclick="setView('board')">Board</div>
+  <div class="tab" data-v="list" onclick="setView('list')">All Files</div>
+  <div class="tab" data-v="monthly" onclick="setView('monthly')">By Month</div>
+  <div class="tab" data-v="reps" onclick="setView('reps')">By Rep</div>
+</div>
+
+<div class="tbar">
+  <input type="text" id="q" placeholder="Search address or file…" oninput="render()">
+  <select id="fType" onchange="render()"><option value="">All types</option><option value="res">Residential</option><option value="com">Commercial</option></select>
+  <select id="fStatus" onchange="render()"><option value="">All statuses</option></select>
+  <select id="fRep" onchange="render()"><option value="">All reps</option></select>
+  <span class="cnt" id="cnt">0 files</span>
+</div>
+
+<div class="wrap">
+  <div class="view active" id="v-board"><div class="board" id="board"></div>
+    <div class="legend">Board and summary figures are shown as a <b>&plusmn;5% range</b> for quick reading. Exact promulgated amounts are on <b>All Files</b>, in the file window, and in the CSV export.</div>
+  </div>
+  <div class="view" id="v-list"><div id="tbl"></div></div>
+  <div class="view" id="v-monthly"><div id="mon"></div></div>
+  <div class="view" id="v-reps"><div id="reps"></div></div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeModal()"></div>
+<div class="modal" id="modal"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const AGENT_SPLIT = 0.85;   // P-23 — agent 85% / underwriter 15%
+
+/* TDI promulgated basic rate, effective March 1, 2026 */
+const TIERS=[[100000,1000000,100000,0.00494,780],[1000000,5000000,1000000,0.00406,5226],
+  [5000000,15000000,5000000,0.00335,21466],[15000000,25000000,15000000,0.00238,54966],
+  [25000000,50000000,25000000,0.00143,78766],[50000000,1e8,50000000,0.00126,114516],
+  [1e8,Infinity,1e8,0.00116,179016]];
+const LOW=[[25000,308],[30000,339],[35000,372],[40000,402],[43000,420],[45000,434],[50000,465],[55000,502],
+  [60000,530],[62000,541],[65000,560],[70000,591],[75000,621],[81000,662],[85000,687],[90000,718],[95000,749],[100000,780]];
+function basicPremium(a){
+  a=+a||0; if(a<=0) return 0; if(a<25000) return 308;
+  if(a<=100000){
+    for(const pr of LOW) if(a===pr[0]) return pr[1];
+    for(let i=0;i<LOW.length-1;i++){
+      if(a>LOW[i][0] && a<LOW[i+1][0]){
+        const t=(a-LOW[i][0])/(LOW[i+1][0]-LOW[i][0]);
+        return Math.round(LOW[i][1]+t*(LOW[i+1][1]-LOW[i][1]));
+      }
+    }
+  }
+  for(const tr of TIERS) if(a>tr[0] && a<=tr[1]) return Math.round((a-tr[2])*tr[3])+tr[4];
+  return 0;
+}
+/* Premium only — no escrow fee, no ancillary fees. */
+function econ(f){
+  const price=+f.price||0, owners=basicPremium(price), endo=+f.endorsements||0;
+  const gross=owners+endo, agent=gross*AGENT_SPLIT;
+  return {price,owners,endo,gross,agent,uw:gross-agent};
+}
+
+const STATUS=[
+  {k:'anticipated', l:'Pending Order',      sl:'Pending',   c:'#6366F1', p:.50, s:'Contract in hand, GF not yet opened'},
+  {k:'open',        l:'In Escrow',          sl:'Escrow',    c:'#B08D57', p:.85, s:'GF opened — commitment and curative'},
+  {k:'funded',      l:'Funded & Disbursed', sl:'Funded',    c:'#15803D', p:1,   s:'Closed and disbursed'},
+  {k:'fell',        l:'Cancelled',          sl:'Cancelled', c:'#9B3B3B', p:0,   s:'Terminated or fell through'}
+];
+const stat = k => STATUS.find(x=>x.k===k) || STATUS[0];
+const repOf = f => (f.rep||'').trim() || 'Unassigned';
+function allReps(){ const set={}; files.forEach(f=>{ const r=(f.rep||'').trim(); if(r) set[r]=1; });
+  return Object.keys(set).sort((a,b)=>a.localeCompare(b)); }
+
+let files = migrate();
+let view='board', sortKey='closeDate', sortDir=1, editId=null, draft=null;
+let pType = localStorage.getItem('ht_ptype') || 'month';
+let anchor = new Date(); anchor.setDate(1);
+
+function safeLoad(k){ try{ const r=localStorage.getItem(k); return r?JSON.parse(r):null; }catch(e){ return null; } }
+function migrate(){
+  const v2=safeLoad('ht_files_v2'); if(v2) return v2;
+  const v1=safeLoad('ht_files_v1');
+  if(v1 && v1.length){
+    const map={contract:'anticipated',opened:'anticipated',commit:'open',curative:'open',ctc:'open',funded:'funded',dead:'fell'};
+    const out=v1.map(f=>({id:f.id,name:f.name,rep:f.rep||'',type:f.type,price:f.price,closeDate:f.closeDate,
+      endorsements:f.endorsements||'',status:map[f.stage]||'anticipated'}));
+    try{ localStorage.setItem('ht_files_v2',JSON.stringify(out)); }catch(e){}
+    return out;
+  }
+  return [];
+}
+function save(){ try{ localStorage.setItem('ht_files_v2',JSON.stringify(files)); }catch(e){} }
+const uid=()=> 'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function money(n){ n=+n||0; if(Math.abs(n)>=1e6) return '$'+(n/1e6).toFixed(2)+'M'; return '$'+Math.round(n).toLocaleString(); }
+function moneyFull(n){ return '$'+Math.round(+n||0).toLocaleString('en-US'); }
+/* Quick-view range: exact figure ±5%, rounded to a readable step. */
+const RANGE_PCT = 0.05;
+function rangeStr(n){
+  n=+n||0; if(n<=0) return '$0';
+  let step = n>=10000 ? 500 : n>=1000 ? 100 : 50;
+  let lo=Math.round(n*(1-RANGE_PCT)/step)*step, hi=Math.round(n*(1+RANGE_PCT)/step)*step;
+  while(lo>=hi && step>1){ step=Math.max(1,Math.round(step/5));
+    lo=Math.round(n*(1-RANGE_PCT)/step)*step; hi=Math.round(n*(1+RANGE_PCT)/step)*step; }
+  return '$'+lo.toLocaleString('en-US')+' \u2013 $'+hi.toLocaleString('en-US');
+}
+/* live comma formatting inside a number input, caret preserved */
+function fmtInput(el){
+  const raw=el.value, caret=el.selectionStart||0;
+  const before=(raw.slice(0,caret).match(/\d/g)||[]).length;
+  const digits=raw.replace(/[^\d]/g,'');
+  const out= digits ? (+digits).toLocaleString('en-US') : '';
+  el.value=out;
+  let pos=0,seen=0;
+  while(pos<out.length && seen<before){ if(/\d/.test(out[pos])) seen++; pos++; }
+  try{ el.setSelectionRange(pos,pos); }catch(e){}
+  return digits;
+}
+const withCommas = v => { const d=String(v==null?'':v).replace(/[^\d]/g,''); return d?(+d).toLocaleString('en-US'):''; };
+function money2(n){ return '$'+(+n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function toast(t){ const el=document.getElementById('toast'); el.textContent=t; el.classList.add('on');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),2200); }
+const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+
+/* ---------- PERIOD ---------- */
+const NAVIGABLE={month:1,quarter:1,year:1};
+function shortD(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}) : ''; }
+function periodRange(){
+  const now=new Date(), today=iso(now), Y=now.getFullYear(), M=now.getMonth();
+  if(pType==='all')  return {from:'0000-01-01', to:'9999-12-31', label:'All time'};
+  if(pType==='custom'){
+    const a=(document.getElementById('cFrom')||{}).value||'';
+    const b=(document.getElementById('cTo')||{}).value||'';
+    return {from:a||'0000-01-01', to:b||'9999-12-31',
+            label:(a?shortD(a):'Beginning')+'  \u2013  '+(b?shortD(b):'Today')};
+  }
+  if(pType==='mtd') return {from:iso(new Date(Y,M,1)), to:today,
+    label:'MTD \u00b7 '+now.toLocaleDateString(undefined,{month:'long',year:'numeric'})};
+  if(pType==='qtd'){ const q=Math.floor(M/3);
+    return {from:iso(new Date(Y,q*3,1)), to:today, label:'QTD \u00b7 Q'+(q+1)+' '+Y}; }
+  if(pType==='ytd') return {from:iso(new Date(Y,0,1)), to:today, label:'YTD \u00b7 '+Y};
+  const y=anchor.getFullYear(), m=anchor.getMonth();
+  if(pType==='month'){
+    const from=new Date(y,m,1), to=new Date(y,m+1,0);
+    return {from:iso(from), to:iso(to), label:from.toLocaleDateString(undefined,{month:'long',year:'numeric'})};
+  }
+  if(pType==='quarter'){
+    const q=Math.floor(m/3), from=new Date(y,q*3,1), to=new Date(y,q*3+3,0);
+    return {from:iso(from), to:iso(to), label:'Q'+(q+1)+' '+y};
+  }
+  return {from:iso(new Date(y,0,1)), to:iso(new Date(y,11,31)), label:String(y)};
+}
+function updatePerUI(){
+  document.getElementById('pnav').style.display    = NAVIGABLE[pType] ? 'flex' : 'none';
+  document.getElementById('pcustom').style.display = pType==='custom' ? 'flex' : 'none';
+  document.getElementById('plabel').style.display  = pType==='custom' ? 'none' : 'inline';
+  document.getElementById('btnToday').style.display= NAVIGABLE[pType] ? 'inline-block' : 'none';
+}
+function setPeriodType(v){
+  pType=v; try{localStorage.setItem('ht_ptype',v);}catch(e){}
+  if(v==='custom'){
+    const cf=document.getElementById('cFrom'), ct=document.getElementById('cTo');
+    if(!cf.value && !ct.value){ const n=new Date();
+      cf.value=iso(new Date(n.getFullYear(),n.getMonth(),1)); ct.value=iso(n); }
+  }
+  updatePerUI(); render();
+}
+function shift(n){
+  if(pType==='month') anchor.setMonth(anchor.getMonth()+n);
+  else if(pType==='quarter') anchor.setMonth(anchor.getMonth()+n*3);
+  else anchor.setFullYear(anchor.getFullYear()+n);
+  render();
+}
+function goToday(){ anchor=new Date(); anchor.setDate(1); render(); }
+function inPeriod(f){
+  if(pType==='all') return true;
+  if(!f.closeDate) return false;
+  const r=periodRange(); return f.closeDate>=r.from && f.closeDate<=r.to;
+}
+
+function filtered(){
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  const ft=document.getElementById('fType').value, fs=document.getElementById('fStatus').value;
+  return files.filter(f=>{
+    if(!inPeriod(f)) return false;
+    if(q && (f.name||'').toLowerCase().indexOf(q)<0) return false;
+    if(ft && f.type!==ft) return false;
+    if(fs && f.status!==fs) return false;
+    const fr=document.getElementById('fRep').value;
+    if(fr && repOf(f)!==fr) return false;
+    return true;
+  });
+}
+
+/* ---------- RENDER ---------- */
+function setView(v){ view=v;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('v-'+v).classList.add('active'); render(); }
+
+function render(){
+  const pr=periodRange();
+  document.getElementById('plabel').textContent=pr.label;
+  const noDate=files.filter(f=>!f.closeDate).length;
+  document.getElementById('ptoday').textContent = (noDate && pType!=='all')
+    ? noDate+' file'+(noDate===1?'':'s')+' without a closing date — see All time' : '';
+  const repSel=document.getElementById('fRep'), keep=repSel.value;
+  const opts=['Unassigned'].concat(allReps());
+  repSel.innerHTML='<option value="">All reps</option>'+opts.map(r=>'<option value="'+esc(r)+'">'+esc(r)+'</option>').join('');
+  repSel.value = opts.indexOf(keep)>=0 ? keep : '';
+  const list=filtered();
+  document.getElementById('cnt').textContent=list.length+' file'+(list.length===1?'':'s');
+  summary(list);
+  if(view==='board') board(list);
+  else if(view==='list') table(list);
+  else if(view==='reps') repsView(list);
+  else monthly();
+}
+
+function summary(list){
+  const g={}; STATUS.forEach(s=>g[s.k]={n:0,rev:0,vol:0});
+  let vol=0,gross=0,rev=0,wtd=0,funded=0;
+  for(const f of list){
+    const e=econ(f), s=stat(f.status);
+    if(g[f.status]){ g[f.status].n++; g[f.status].rev+=e.agent; g[f.status].vol+=e.price; }
+    if(f.status!=='fell'){ vol+=e.price; gross+=e.gross; rev+=e.agent; wtd+=e.agent*s.p; }
+    if(f.status==='funded') funded+=e.agent;
+  }
+  const cur=document.getElementById('fStatus').value;
+  document.getElementById('cards').innerHTML=STATUS.map(s=>{
+    const x=g[s.k];
+    return '<div class="sc '+(cur===s.k?'sel':'')+'" style="border-left-color:'+s.c+'" onclick="pickStatus(\''+s.k+'\')">'
+      +'<div class="sc-t"><span class="sc-l">'+s.l+'</span><span class="sc-n">'+x.n+'</span></div>'
+      +'<div class="sc-v">'+rangeStr(x.rev)+'</div>'
+      +'<div class="sc-s">'+money(x.vol)+' volume · '+s.s+'</div></div>';
+  }).join('');
+  document.getElementById('sFiles').textContent=list.length;
+  document.getElementById('sVol').textContent=money(vol);
+  document.getElementById('sGross').textContent=money(gross);
+  document.getElementById('sRev').textContent=money(rev);
+  document.getElementById('sWtd').textContent=money(wtd);
+  document.getElementById('sFunded').textContent=money(funded);
+}
+function pickStatus(k){ const el=document.getElementById('fStatus');
+  el.value = (el.value===k?'':k); setView('board'); }
+
+function card(f){
+  const e=econ(f), today=iso(new Date());
+  const late=f.closeDate && f.closeDate<today && (f.status==='anticipated'||f.status==='open');
+  const nexts=STATUS.filter(s=>s.k!==f.status);
+  return '<div class="card" onclick="openEdit(\''+f.id+'\')">'
+    +'<div class="c-name">'+esc(f.name||'Untitled file')+'</div>'
+    +'<div class="c-chips"><span class="chip '+(f.type==='com'?'com':'res')+'">'+(f.type==='com'?'Commercial':'Residential')+'</span>'
+    +'<span class="chip rep">'+esc(repOf(f))+'</span></div>'
+    +'<div class="c-row"><span>Sales price</span><b>'+moneyFull(e.price)+'</b></div>'
+    +'<div class="c-row"><span>Gross premium</span><b>'+rangeStr(e.gross)+'</b></div>'
+    +'<div class="c-rev"><span>Hampton 85%</span><span class="amt">'+rangeStr(e.agent)+'</span></div>'
+    +(f.closeDate?'<div class="c-date '+(late?'past':'')+'">'+(late?'⚠ ':'📅 ')
+      +new Date(f.closeDate+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'})+'</div>':'')
+    +'<div class="qbtns" onclick="event.stopPropagation()">'
+    + nexts.map(s=>'<button class="qb" onclick="setStatus(\''+f.id+'\',\''+s.k+'\')">'+s.sl+'</button>').join('')
+    +'</div></div>';
+}
+function setStatus(id,k){ const f=files.find(x=>x.id===id); if(!f) return;
+  f.status=k; save(); render(); toast('Moved to '+stat(k).l); }
+
+function board(list){
+  const b=document.getElementById('board');
+  if(!files.length){ b.innerHTML='<div class="empty" style="grid-column:1/-1"><b>No files yet</b>Add your first closing to start tracking anticipated premium.</div>'; return; }
+  b.innerHTML=STATUS.map(s=>{
+    const col=list.filter(f=>f.status===s.k);
+    const rev=col.reduce((t,f)=>t+econ(f).agent,0);
+    return '<div class="col" style="--cc:'+s.c+'"><div class="col-h"><span class="col-d"></span>'
+      +'<span class="col-t">'+s.l+'</span><span class="col-n">'+col.length+'</span>'
+      +'<span class="col-m">'+money(rev)+'</span></div>'
+      +(col.length?col.map(card).join(''):'<div class="col-e">—</div>')+'</div>';
+  }).join('');
+}
+
+function table(list){
+  if(!list.length){ document.getElementById('tbl').innerHTML='<div class="empty"><b>No files in this period</b>Change the period above, or add a file.</div>'; return; }
+  const cols=[['name','File / Property',0],['rep','Rep',0],['type','Type',0],['closeDate','Closing',0],['status','Status',0],
+    ['price','Sales Price',1],['owners','Owner\u2019s Premium',1],['gross','Gross Premium',1],
+    ['uw','Underwriter 15%',1],['agent','Hampton 85%',1]];
+  const rows=list.slice().sort(function(a,b){
+    const ea=econ(a), eb=econ(b);
+    const va=(sortKey in ea)?ea[sortKey]:(a[sortKey]||''), vb=(sortKey in eb)?eb[sortKey]:(b[sortKey]||'');
+    return (va>vb?1:va<vb?-1:0)*sortDir;
+  });
+  let h='<table><thead><tr>'+cols.map(c=>'<th class="'+(c[2]?'r':'')+'" onclick="setSort(\''+c[0]+'\')">'+c[1]
+    +(sortKey===c[0]?(sortDir>0?' ▲':' ▼'):'')+'</th>').join('')+'</tr></thead><tbody>';
+  const t={price:0,owners:0,gross:0,uw:0,agent:0};
+  for(const f of rows){ const e=econ(f), s=stat(f.status);
+    for(const k in t) t[k]+=e[k];
+    h+='<tr onclick="openEdit(\''+f.id+'\')"><td><b>'+esc(f.name||'Untitled')+'</b></td>'
+      +'<td>'+esc(repOf(f))+'</td>'
+      +'<td>'+(f.type==='com'?'Commercial':'Residential')+'</td>'
+      +'<td>'+(f.closeDate?new Date(f.closeDate+'T12:00:00').toLocaleDateString():'—')+'</td>'
+      +'<td><span class="pill" style="background:'+s.c+'">'+s.l+'</span></td>'
+      +'<td class="r">'+moneyFull(e.price)+'</td><td class="r">'+money2(e.owners)+'</td>'
+      +'<td class="r">'+money2(e.gross)+'</td><td class="r">'+money2(e.uw)+'</td>'
+      +'<td class="r"><b style="color:var(--green)">'+money2(e.agent)+'</b></td></tr>';
+  }
+  h+='</tbody><tfoot><tr style="background:var(--navy);color:#fff;font-weight:700">'
+    +'<td colspan="5" style="color:#fff">'+rows.length+' file'+(rows.length===1?'':'s')+'</td>'
+    +'<td class="r" style="color:#fff">'+moneyFull(t.price)+'</td><td class="r" style="color:#fff">'+money2(t.owners)+'</td>'
+    +'<td class="r" style="color:#fff">'+money2(t.gross)+'</td><td class="r" style="color:#fff">'+money2(t.uw)+'</td>'
+    +'<td class="r" style="color:var(--gold)">'+money2(t.agent)+'</td></tr></tfoot></table>';
+  document.getElementById('tbl').innerHTML=h;
+}
+function setSort(k){ if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=1; } render(); }
+
+/* By Month spans every month regardless of the period selector. */
+function monthly(){
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  const ft=document.getElementById('fType').value;
+  const pool=files.filter(f=> f.status!=='fell'
+    && (!q || (f.name||'').toLowerCase().indexOf(q)>=0) && (!ft || f.type===ft));
+  if(!pool.length){ document.getElementById('mon').innerHTML='<div class="empty"><b>Nothing to show</b>Add files with anticipated closing dates.</div>'; return; }
+  const g={}; pool.forEach(f=>{ const k=f.closeDate?f.closeDate.slice(0,7):'zzz'; (g[k]=g[k]||[]).push(f); });
+  const curKey=iso(anchor).slice(0,7);
+  let h='', tRev=0, tWtd=0;
+  Object.keys(g).sort().forEach(function(k){
+    const items=g[k].sort((a,b)=>String(a.closeDate||'').localeCompare(String(b.closeDate||'')));
+    const rev=items.reduce((s,f)=>s+econ(f).agent,0);
+    const wtd=items.reduce((s,f)=>s+econ(f).agent*stat(f.status).p,0);
+    tRev+=rev; tWtd+=wtd;
+    const label = k==='zzz' ? 'No closing date set'
+      : new Date(k+'-01T12:00:00').toLocaleDateString(undefined,{month:'long',year:'numeric'});
+    h+='<div class="mg '+(k==='zzz'?'uns':'')+' '+(k===curKey?'cur':'')+'">'
+      +'<div class="mg-h" '+(k==='zzz'?'':'onclick="jumpMonth(\''+k+'\')"')+'>'
+      +'<span class="mg-m">'+label+'</span><span class="mg-n">'+items.length+' file'+(items.length===1?'':'s')+'</span>'
+      +'<span class="mg-t">'+money(rev)+' &nbsp;<b>'+money(wtd)+' weighted</b></span></div>';
+    items.forEach(function(f){ const e=econ(f), s=stat(f.status);
+      h+='<div class="mr" onclick="openEdit(\''+f.id+'\')"><span class="pill" style="background:'+s.c+'">'+s.l+'</span>'
+        +'<span class="mr-n">'+esc(f.name||'Untitled')+'</span>'
+        +'<span class="mr-x">'+moneyFull(e.price)+'</span>'
+        +'<span class="mr-w">'+money2(e.agent)+'</span></div>';
+    });
+    h+='</div>';
+  });
+  h+='<div class="mtot">Anticipated Hampton premium <b>'+money2(tRev)+'</b> &nbsp;·&nbsp; weighted <b>'+money2(tWtd)+'</b>'
+    +'<div class="n">Premium only — Hampton\u2019s '+Math.round(AGENT_SPLIT*100)+'% share of the TDI promulgated rate under P-23. '
+    +'Escrow and ancillary fees are excluded. Weighting: pending 50%, in escrow 85%, funded 100%. '
+    +'Cancelled files are excluded. This view spans all months regardless of the period selector.</div></div>';
+  document.getElementById('mon').innerHTML=h;
+}
+function repsView(list){
+  const host=document.getElementById('reps');
+  if(!list.length){ host.innerHTML='<div class="empty"><b>No files in this period</b>Change the period above, or add a file.</div>'; return; }
+  const g={};
+  for(const f of list){ const r=repOf(f); (g[r]=g[r]||[]).push(f); }
+  const keys=Object.keys(g).sort((a,b)=>{
+    const sa=g[a].reduce((t,f)=>t+(f.status==='fell'?0:econ(f).agent),0);
+    const sb=g[b].reduce((t,f)=>t+(f.status==='fell'?0:econ(f).agent),0);
+    return sb-sa;
+  });
+  let h='', gRev=0, gWtd=0, gVol=0, gN=0;
+  for(const r of keys){
+    const items=g[r].sort((a,b)=>String(a.closeDate||'').localeCompare(String(b.closeDate||'')));
+    const live=items.filter(f=>f.status!=='fell');
+    const vol=live.reduce((t,f)=>t+econ(f).price,0);
+    const rev=live.reduce((t,f)=>t+econ(f).agent,0);
+    const wtd=live.reduce((t,f)=>t+econ(f).agent*stat(f.status).p,0);
+    const fell=items.length-live.length;
+    gRev+=rev; gWtd+=wtd; gVol+=vol; gN+=items.length;
+    h+='<div class="mg"><div class="mg-h"><span class="mg-m">'+esc(r)+'</span>'
+      +'<span class="mg-n">'+items.length+' file'+(items.length===1?'':'s')
+      +(fell?' · '+fell+' fell through':'')+'</span>'
+      +'<span class="mg-t">'+moneyFull(vol)+' volume &nbsp;·&nbsp; '+money2(rev)+' &nbsp;<b>'+money2(wtd)+' weighted</b></span></div>';
+    for(const f of items){ const e=econ(f), st=stat(f.status);
+      h+='<div class="mr" onclick="openEdit(\''+f.id+'\')"><span class="pill" style="background:'+st.c+'">'+st.l+'</span>'
+        +'<span class="mr-n">'+esc(f.name||'Untitled')+'</span>'
+        +'<span class="mr-x">'+(f.closeDate?new Date(f.closeDate+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'}):'—')+'</span>'
+        +'<span class="mr-x">'+moneyFull(e.price)+'</span>'
+        +'<span class="mr-w">'+money2(e.agent)+'</span></div>';
+    }
+    h+='</div>';
+  }
+  h+='<div class="mtot">'+keys.length+' rep'+(keys.length===1?'':'s')+' &nbsp;·&nbsp; '+gN+' file'+(gN===1?'':'s')
+    +' &nbsp;·&nbsp; '+moneyFull(gVol)+' volume<br>Hampton premium <b>'+money2(gRev)+'</b> &nbsp;·&nbsp; weighted <b>'+money2(gWtd)+'</b>'
+    +'<div class="n">Reflects the selected period and filters. Cancelled files are listed but excluded from volume and premium totals.</div></div>';
+  host.innerHTML=h;
+}
+function jumpMonth(k){ anchor=new Date(k+'-01T12:00:00'); pType='month';
+  document.getElementById('pType').value='month';
+  document.getElementById('pnav').style.display='flex'; setView('board'); }
+
+/* ---------- ADD / EDIT ---------- */
+function blank(){ return {id:uid(),name:'',rep:'',type:'res',price:'',closeDate:'',endorsements:'',status:'anticipated'}; }
+function openNew(){ draft=blank(); editId=null; drawModal('Add Closing File'); }
+function openEdit(id){ const f=files.find(x=>x.id===id); if(!f) return;
+  draft=JSON.parse(JSON.stringify(f)); editId=id; drawModal('Edit File'); }
+function closeModal(){ document.getElementById('modal').classList.remove('on');
+  document.getElementById('scrim').classList.remove('on'); draft=null; }
+function dset(k,v){ draft[k]=v; drawModal(editId?'Edit File':'Add Closing File', true); }
+
+function drawModal(title, keep){
+  const f=draft, e=econ(f);
+  document.getElementById('modal').innerHTML=
+   '<div class="m-h"><h2>'+title+'</h2><button class="m-x" onclick="closeModal()">×</button></div>'
+  +'<div class="m-b"><div class="fgrid">'
+  +'<label class="f full"><span class="t">Property address / file name</span>'
+  +'<input id="i-name" value="'+esc(f.name)+'" oninput="draft.name=this.value" placeholder="Property address or GF number"></label>'
+  +'<label class="f"><span class="t">Deal amount <span class="hint">drives the promulgated premium</span></span>'
+  +'<input id="i-price" type="text" inputmode="numeric" value="'+withCommas(f.price)+'" '
+  +'oninput="draft.price=fmtInput(this)" onblur="dset(\'price\',draft.price)" placeholder="Contract sales price"></label>'
+  +'<label class="f"><span class="t">Sales rep <span class="hint">source of the file</span></span>'
+  +'<input id="i-rep" list="repList" value="'+esc(f.rep||'')+'" oninput="draft.rep=this.value" placeholder="Who brought this file in"></label>'
+  +'<datalist id="repList">'+allReps().map(r=>'<option value="'+esc(r)+'">').join('')+'</datalist>'
+  +'<label class="f"><span class="t">Closing date <span class="hint">scheduled or estimated</span></span>'
+  +'<input id="i-date" type="date" value="'+esc(f.closeDate)+'" onchange="dset(\'closeDate\',this.value)"></label>'
+  +'<label class="f full"><span class="t">Transaction type</span><div class="seg">'
+  +'<button type="button" class="'+(f.type==='res'?'on':'')+'" style="'+(f.type==='res'?'background:#1D4E89':'')+'" onclick="dset(\'type\',\'res\')">Residential</button>'
+  +'<button type="button" class="'+(f.type==='com'?'on':'')+'" style="'+(f.type==='com'?'background:#8A6E43':'')+'" onclick="dset(\'type\',\'com\')">Commercial</button>'
+  +'</div></label>'
+  +'<label class="f full"><span class="t">Status</span><div class="seg">'
+  + STATUS.map(s=>'<button type="button" class="'+(f.status===s.k?'on':'')+'" style="'+(f.status===s.k?'background:'+s.c:'')+'" onclick="dset(\'status\',\''+s.k+'\')">'+s.l+'</button>').join('')
+  +'</div></label>'
+  +'<label class="f full"><span class="t">Endorsements <span class="hint">optional — promulgated, split 85/15 the same way</span></span>'
+  +'<input id="i-end" type="text" inputmode="numeric" value="'+withCommas(f.endorsements)+'" '
+  +'oninput="draft.endorsements=fmtInput(this)" onblur="dset(\'endorsements\',draft.endorsements)" placeholder="Total endorsement premium, if any"></label>'
+  +'</div>'
+  +'<div class="calc"><h4>Anticipated premium</h4>'
+  +'<div class="cl"><span>Owner\u2019s policy — '+money(e.price)+'</span><span class="v">'+money2(e.owners)+'</span></div>'
+  +(e.endo>0?'<div class="cl"><span>Endorsements</span><span class="v">'+money2(e.endo)+'</span></div>':'')
+  +'<div class="cl"><span><b>Gross premium</b></span><span class="v"><b>'+money2(e.gross)+'</b></span></div>'
+  +'<div class="cl sub"><span>Less underwriter 15% (P-23)</span><span class="v">−'+money2(e.uw)+'</span></div>'
+  +'<div class="cl tot"><span>Hampton premium (85%)</span><span class="v">'+money2(e.agent)+'</span></div>'
+  +'<div class="cl sub"><span>Quick-view range (\u00b15%)</span><span class="v">'+rangeStr(e.agent)+'</span></div>'
+  +'<div class="cl sub"><span>Escrow and ancillary fees are not included.</span><span></span></div>'
+  +'</div>'
+  +'<div class="m-f">'
+  +(editId?'<button class="btn btn-del" onclick="delFile()">🗑 Delete file</button>':'')
+  +'<button class="btn btn-d" onclick="closeModal()">Cancel</button>'
+  +'<button class="btn btn-nav" id="saveBtn" onclick="saveFile()">'+(editId?'Save changes':'Add file')+'</button>'
+  +'</div></div>';
+  document.getElementById('modal').classList.add('on');
+  document.getElementById('scrim').classList.add('on');
+  if(!keep) setTimeout(function(){ const n=document.getElementById('i-name'); if(n) n.focus(); },60);
+}
+function saveFile(){
+  if(!draft.name.trim()){ toast('Give the file a name or address'); return; }
+  if(!(+draft.price>0)){ toast('Enter the deal amount'); return; }
+  const d=draft;
+  if(editId){ files[files.findIndex(x=>x.id===editId)]=d; toast('File updated'); }
+  else {
+    files.push(d);
+    const shown = inPeriod(d);
+    toast('Added — '+money2(econ(d).agent)+' anticipated premium'+(shown?'':' (outside the current period)'));
+  }
+  save(); closeModal(); render();
+}
+function delFile(){ if(!confirm('Delete this file?')) return;
+  files=files.filter(x=>x.id!==editId); save(); closeModal(); render(); toast('File deleted'); }
+
+function exportCSV(){
+  const head=['File','Rep','Type','Closing','Status','Sales Price','Owners Premium','Endorsements','Gross Premium','Underwriter 15%','Hampton 85%'];
+  const rows=filtered().map(function(f){ const e=econ(f);
+    return [f.name,repOf(f),f.type==='com'?'Commercial':'Residential',f.closeDate,stat(f.status).l,
+      e.price,e.owners,e.endo,e.gross,e.uw.toFixed(2),e.agent.toFixed(2)]; });
+  const csv=[head].concat(rows).map(r=>r.map(c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='hampton-pipeline-'+periodRange().label.replace(/\s+/g,'-').toLowerCase()+'.csv';
+  a.click(); toast('CSV exported — '+periodRange().label);
+}
+
+document.getElementById('fStatus').innerHTML='<option value="">All statuses</option>'
+  + STATUS.map(s=>'<option value="'+s.k+'">'+s.l+'</option>').join('');
+document.getElementById('pType').value=pType;
+if(pType==='custom'){ const n=new Date();
+  document.getElementById('cFrom').value=iso(new Date(n.getFullYear(),n.getMonth(),1));
+  document.getElementById('cTo').value=iso(n); }
+updatePerUI();
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeModal(); });
+render();
+</script>
+</body>
+</html>
